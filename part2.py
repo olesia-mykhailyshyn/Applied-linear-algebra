@@ -13,44 +13,6 @@ dog = np.array([[1, -3], [2, -3], [3, -2], [3, 3], [4, 3], [5, 4], [5, 6], [4, 7
                 [-6, -3], [-4, -2], [-4, 2], [1, 2], [2, -1], [1, -2], [1, -3]])
 
 
-def rotate(points, angle):
-    center = (0, 0)
-    rotation_matrix = cv2.getRotationMatrix2D(center, angle, 1)
-    rotated_points = cv2.transform(np.array([points]), rotation_matrix).squeeze()
-    return rotated_points
-
-
-def scale(points, scale_factor):
-    scaled_points = points * scale_factor
-    return scaled_points
-
-
-def reflect(points, axis):
-    if axis == 'x':
-        reflection_matrix = np.array([[1, 0], [0, -1]], dtype=np.float32)
-    else:
-        reflection_matrix = np.array([[-1, 0], [0, 1]], dtype=np.float32)
-    reflected_points = cv2.transform(np.array([points]), reflection_matrix).squeeze()
-    return reflected_points
-
-
-def shear(points, axis, shear_angle):
-    shear_matrix = np.float32([[1, np.tan(np.radians(shear_angle))],
-                               [np.tan(np.radians(shear_angle)), 1]])
-    if axis == 'x':
-        shear_matrix[1, 0] = 0
-    else:
-        shear_matrix[0, 1] = 0
-    sheared_points = cv2.transform(np.array([points]), shear_matrix).squeeze()
-    return sheared_points
-
-
-def custom_transform(points, transformation_matrix):
-    custom_matrix = np.array(transformation_matrix, dtype=np.float32)
-    transformed_points = cv2.transform(np.array([points]), custom_matrix).squeeze()
-    return transformed_points
-
-
 def visualize_transform(original_points, transformed_points, title):
     fig, ax = plt.subplots()
     ax.plot(original_points[:, 0], original_points[:, 1], marker='o', color='b', label='Оригінальна')
@@ -64,6 +26,58 @@ def visualize_transform(original_points, transformed_points, title):
     ax.axis('equal')
     ax.legend()
     plt.show()
+    print("Матриця точок після трансформації:")
+    print(transformed_points)
+
+
+def rotation(points, angle):
+    rotation_matrix = cv2.getRotationMatrix2D((0, 0), angle, 1)
+    rotated_points = cv2.transform(np.array([points]), rotation_matrix[:, :2]).squeeze()
+    return rotated_points
+
+
+def scaling(points, object_choice, coefficient):
+    if object_choice == 'лисиця':
+        points1 = np.float32(points[:3])
+    else:
+        points1 = np.float32(points[:3])
+    scaled_points = points1 * coefficient
+    scale_matrix = cv2.getAffineTransform(points1, scaled_points)
+    scaled_points = custom_transform(points, scale_matrix)
+    return scaled_points
+
+
+def reflection(points, axis):
+    if object_choice == 'лисиця':
+        points1 = np.float32(points[:3])
+    else:
+        points1 = np.float32(points[:3])
+    if axis == 'x':
+        reflected_points = cv2.transform(np.array([points1]), np.float32([[-1, 0], [0, 1]]))
+    else:
+        reflected_points = cv2.transform(np.array([points1]), np.float32([[1, 0], [0, -1]]))
+    reflection_matrix = cv2.getAffineTransform(points1, reflected_points)
+    reflected_points = custom_transform(points, reflection_matrix)
+    return reflected_points
+
+
+def shearing(points, axis, coefficient):
+    if object_choice == 'лисиця':
+        points1 = np.float32(points[:3])
+    else:
+        points1 = np.float32(points[:3])
+    if axis == 'x':
+        sheared_points = cv2.transform(np.array([points1]), np.float32([[1, 0], [coefficient, 1]]))
+    else:
+        sheared_points = cv2.transform(np.array([points1]), np.float32([[1, coefficient], [0, 1]]))
+    sheared_matrix = cv2.getAffineTransform(points1, sheared_points)
+    sheared_points = custom_transform(points, sheared_matrix)
+    return sheared_points
+
+
+def custom_transform(points, transformation_matrix):
+    transformed_points = cv2.transform(np.array([points]), transformation_matrix).squeeze()
+    return transformed_points
 
 
 def rotate_image(image, angle):
@@ -73,9 +87,14 @@ def rotate_image(image, angle):
     return rotated_image
 
 
-def scale_image(image, scale_factor):
-    scaled_image = cv2.resize(image, None, fx=scale_factor, fy=scale_factor)
-    return scaled_image
+def scale_image(image, coefficient):
+    height, width = image.shape[:2]
+    old_dim = (width, height)
+    new_width = int(width * coefficient)
+    new_height = int(height * coefficient)
+    new_dim = (new_width, new_height)
+    scaled_image = cv2.resize(image, new_dim, interpolation=cv2.INTER_LINEAR)
+    return scaled_image, old_dim, new_dim
 
 
 def reflect_image(image, axis):
@@ -86,39 +105,24 @@ def reflect_image(image, axis):
     return reflected_image
 
 
-def shear_image(image, axis, shear_angle):
-    shear_angle_rad = np.radians(shear_angle)
-    if axis == 'x':
-        shear_matrix = np.array([[1, np.tan(shear_angle_rad), 0],
-                                 [0, 1, 0]], dtype=np.float32)
-    else:
-        shear_matrix = np.array([[1, 0, 0],
-                                 [np.tan(shear_angle_rad), 1, 0]], dtype=np.float32)
-
-    sheared_image = cv2.warpAffine(image, shear_matrix, (image.shape[1], image.shape[0]))
-    return sheared_image
-
-
 def select_object(object_choice):
     if object_choice == 'лисиця':
         return fox.copy(), fox.copy()
     elif object_choice == 'собака':
         return dog.copy(), dog.copy()
     else:
-        image_path = r"image.png"
+        image_path = r'image2.png'
         image = cv2.imread(image_path)
         return image, image
 
 
 while True:
-    command = input(
-        "\nВведіть команду (обертати/маштабувати/відзеркалювати/нахил/універсальна/вихід): ").strip().lower()
+    command = input("\nВведіть команду (обертати/маштабувати/відзеркалювати/нахил/універсальна/вихід): ").strip().lower()
     if command == 'вихід':
         print("Програма завершена.")
         break
 
     object_choice = input("Виберіть об'єкт (лисиця/собака/зображення): ").strip().lower()
-
     original_points, current_points = select_object(object_choice)
 
     if object_choice == 'зображення':
@@ -133,48 +137,43 @@ while True:
         if object_choice == 'зображення':
             current_image = rotate_image(current_image, angle)
         else:
-            current_points = rotate(current_points, angle)
+            current_points = rotation(current_points, angle)
+
 
     elif command == 'маштабувати':
-        scale_factor = float(input("Введіть коефіцієнт масштабування (>1 для збільшення, <1 для зменшення): "))
-        scale_factor = float(input("Введіть коефіцієнт масштабування (>1 для збільшення, <1 для зменшення): "))
+        coefficient = float(input("Введіть коефіцієнт масштабування (k>1 для збільшення, 0<k<1 для зменшення): "))
         if object_choice == 'зображення':
-            current_image = scale_image(current_image, scale_factor)
+            current_image, old_dim, new_dim = scale_image(current_image, coefficient)
+            print(f"Розмір зображення змінився з {old_dim} на {new_dim}")
         else:
-            current_points = scale(current_points, scale_factor)
+            current_points = scaling(current_points, object_choice, coefficient)
 
     elif command == 'відзеркалювати':
         axis = input("Введіть вісь відображення ('x' або 'y'): ").strip().lower()
         if object_choice == 'зображення':
             current_image = reflect_image(current_image, axis)
         else:
-            current_points = reflect(current_points, axis)
+            current_points = reflection(current_points, axis)
 
     elif command == 'нахил':
         axis = input("Введіть вісь нахилу ('x' або 'y'): ").strip().lower()
-        shear_angle = float(input("Введіть кут нахилу в градусах: "))
-        if object_choice == 'зображення':
-            current_image = shear_image(current_image, axis, shear_angle)
-        else:
-            current_points = shear(current_points, axis, shear_angle)
+        coefficient = float(input("Введіть коефіцієнт нахилу: "))
+        current_points = shearing(current_points, axis, coefficient)
 
     elif command == 'універсальна':
-        transformation_matrix = []
+        print("Введіть кастомну матрицю трансформації: ")
+        transformation_matrix = np.zeros((2, 2))
         for i in range(2):
-            row = input(f"Введіть рядок матриці трансформації #{i + 1} (через пробіл): ").strip().split()
-            transformation_matrix.append([float(num) for num in row])
-        if object_choice == 'зображення':
-            current_image = custom_transform(current_image, transformation_matrix)
-        else:
-            current_points = custom_transform(current_points, transformation_matrix)
-
+            for j in range(2):
+                transformation_matrix[i, j] = float(input(f"Елемент [{i}, {j}]: "))
+        current_points = custom_transform(current_points, transformation_matrix)
     else:
         print("Невідома команда. Будь ласка, введіть одну з доступних команд.")
 
     if object_choice != 'зображення':
-        visualize_transform(original_points, current_points, f"Трансформація об'єкту {object_choice.capitalize()}")
+        visualize_transform(original_points, current_points, f'{object_choice.capitalize()} - {command.capitalize()}')
     else:
         plt.imshow(cv2.cvtColor(current_image, cv2.COLOR_BGR2RGB))
-        plt.title(f"Трансформація зображення {object_choice.capitalize()}")
+        plt.title(f"Трансформація зображення - {command.capitalize()}")
         plt.axis('off')
         plt.show()
