@@ -31,8 +31,8 @@ def visualize_transform(original_points, transformed_points, title):
 
 
 def rotation(points, angle):
-    rotation_matrix = cv2.getRotationMatrix2D((0, 0), angle, 1)
-    rotated_points = cv2.transform(np.array([points]), rotation_matrix[:, :2]).squeeze()
+    rotation_matrix = cv2.getRotationMatrix2D((0, 0), -angle, 1)
+    rotated_points = cv2.transform(np.array([points]), rotation_matrix).squeeze() #squeeze — видаляє зайві розміри з масиву
     return rotated_points
 
 
@@ -83,7 +83,7 @@ def custom_transform(points, transformation_matrix):
 def rotate_image(image, angle):
     center = (image.shape[1] // 2, image.shape[0] // 2)
     rotation_matrix = cv2.getRotationMatrix2D(center, angle, 1)
-    rotated_image = cv2.warpAffine(image, rotation_matrix, (image.shape[1], image.shape[0]))
+    rotated_image = cv2.warpAffine(image, rotation_matrix, (image.shape[1], image.shape[0])) # warpAffine - застосовує обертання до зображення
     return rotated_image
 
 
@@ -173,7 +173,5 @@ while True:
     if object_choice != 'зображення':
         visualize_transform(original_points, current_points, f'{object_choice.capitalize()} - {command.capitalize()}')
     else:
-        plt.imshow(cv2.cvtColor(current_image, cv2.COLOR_BGR2RGB))
         plt.title(f"Трансформація зображення - {command.capitalize()}")
-        plt.axis('off')
         plt.show()

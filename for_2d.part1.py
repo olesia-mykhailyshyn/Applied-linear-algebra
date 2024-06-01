@@ -13,7 +13,7 @@ dog = np.array([[1, -3], [2, -3], [3, -2], [3, 3], [4, 3], [5, 4], [5, 6], [4, 7
 
 
 def visualisation(points1, points2, title, ax, color1='b', color2='r', alpha=0.3):
-    ax.plot(points1[:, 0], points1[:, 1], marker='o', color=color1, label='Оригінальна')
+    ax.plot(points1[:, 0], points1[:, 1], marker='o', color=color1, label='Оригінальна') #points1[:, 0] - x, points1[:, 1] - y
     ax.fill(points1[:, 0], points1[:, 1], alpha=alpha, color=color1)
     ax.plot(points2[:, 0], points2[:, 1], marker='o', color=color2, label='Трансформована')
     ax.fill(points2[:, 0], points2[:, 1], alpha=alpha, color=color2)
@@ -21,7 +21,7 @@ def visualisation(points1, points2, title, ax, color1='b', color2='r', alpha=0.3
     ax.set_xlabel('Вісь X')
     ax.set_ylabel('Вісь Y')
     ax.grid(True)
-    ax.axis('equal')
+    ax.axis('equal') #однаковий масштаб
     ax.legend()
 
 
@@ -66,8 +66,8 @@ def custom_transform(points, transformation_matrix):
 
 
 def display_result(original_points, transformed_points, title):
-    fig, ax = plt.subplots()
-    visualisation(original_points, transformed_points, title, ax)
+    fig, ax = plt.subplots() #створення фігури
+    visualisation(original_points, transformed_points, title, ax) #візуалізація фігури
     plt.show()
     print("Матриця точок після трансформації:")
     print(transformed_points)

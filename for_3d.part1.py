@@ -6,6 +6,7 @@ cube = np.array([[0, 0, 0], [1, 0, 0], [1, 1, 0], [0, 1, 0], [0, 0, 1], [1, 0, 1
 
 
 def visualisation_3d(points1, points2, title, ax, color1='b', color2='r', alpha=0.3):
+    # створення граней куба. кожна грань цу список 4 вершин
     vertices1 = [[points1[0], points1[1], points1[2], points1[3]],
                  [points1[4], points1[5], points1[6], points1[7]],
                  [points1[0], points1[1], points1[5], points1[4]],
@@ -20,6 +21,7 @@ def visualisation_3d(points1, points2, title, ax, color1='b', color2='r', alpha=
                  [points2[1], points2[2], points2[6], points2[5]],
                  [points2[4], points2[7], points2[3], points2[0]]]
 
+    # додавання граней куба на графік
     for face in vertices1:
         ax.add_collection3d(Poly3DCollection([face], color=color1, alpha=alpha))
     for face in vertices2:
@@ -31,6 +33,7 @@ def visualisation_3d(points1, points2, title, ax, color1='b', color2='r', alpha=
     ax.set_zlabel('Вісь Z')
     ax.grid(True)
 
+    # обчислення лімітів осей для візуалізації
     all_points = np.concatenate((points1, points2))
     max_range = np.array([all_points[:, 0].max() - all_points[:, 0].min(),
                           all_points[:, 1].max() - all_points[:, 1].min(),
@@ -39,10 +42,13 @@ def visualisation_3d(points1, points2, title, ax, color1='b', color2='r', alpha=
     mid_x = (all_points[:, 0].max() + all_points[:, 0].min()) * 0.5
     mid_y = (all_points[:, 1].max() + all_points[:, 1].min()) * 0.5
     mid_z = (all_points[:, 2].max() + all_points[:, 2].min()) * 0.5
+
+    # встановлення лімітів осей
     ax.set_xlim(mid_x - max_range, mid_x + max_range)
     ax.set_ylim(mid_y - max_range, mid_y + max_range)
     ax.set_zlim(mid_z - max_range, mid_z + max_range)
 
+    # створення та додавання легенди
     custom_lines = [plt.Line2D([0], [0], color=color1, lw=4),
                     plt.Line2D([0], [0], color=color2, lw=4)]
     ax.legend(custom_lines, ['Оригінальна', 'Трансформована'])
